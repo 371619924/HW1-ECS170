@@ -12,10 +12,17 @@ def heuristic(node: TilesNode) -> int:
     heuristic_value : int
         The heuristic value of the current node.
     """
-    flat = [v for row in node.state for v in row]
-    N = len(flat)
-    goal = list(range(1, N)) + [0]
-    return sum(1 for i, v in enumerate(flat) if v != 0 and v != goal[i])
+    size = len(node.state)
+    dist = 0
+    for r in range(size):
+        for c in range(size):
+            val = node.state[r][c]
+            if val == 0:
+                continue
+            goal_r = (val - 1) // size
+            goal_c = (val - 1) % size
+            dist += abs(goal_r - r) + abs(goal_c - c)
+    return dist
 
 
 def AStar(root, heuristic: callable) -> TilesNode or None:  # type: ignore
@@ -27,40 +34,42 @@ def AStar(root, heuristic: callable) -> TilesNode or None:  # type: ignore
     if root.is_goal():
         return [root]
 
-    openq: PriorityQueue = PriorityQueue()
+    unexplored = PriorityQueue()
     counter = 0
 
     g_score = {root: 0}
-    openq.put((h(root), counter, root))
+    f0 = heuristic(root)
+    unexplored.put((f0, counter, root))
 
-    closed = set()
+    explored = set()
 
-    while not openq.empty():
-        _, _, current = openq.get()
-        if current in closed:
+    while not unexplored.empty():
+        f_curr, _, current = unexplored.get()
+
+        # If this node has already been finalized with a better g, skip
+        if current in explored:
             continue
 
         if current.is_goal():
-            # 回溯得到整条解路径
-            path = []
-            p = current
-            while p is not None:
-                path.append(p)
-                p = getattr(p, "parent", None)
-            return path[::-1]
+            return current.get_path()
 
-        closed.add(current)
+        explored.add(current)
 
-        for nb in current.get_children():
-            if nb in closed:
+        curr_g = g_score[current]
+
+        for child in current.get_children():
+            tentative_g = curr_g + 1  # each move costs 1
+
+            # If we've already finalized a better path, skip
+            if child in explored and tentative_g >= g_score.get(child, inf):
                 continue
-            tentative_g = g_score[current] + 1
-            if tentative_g < g_score.get(nb, inf):
-                g_score[nb] = tentative_g
-                counter += 1
-                # 仅在 A* 内设置 parent，不依赖 tiles.py 的实现
-                nb.parent = current
-                f = tentative_g + h(nb)
-                openq.put((f, counter, nb))
 
-    return None
+            # If this path to child is better, record it
+            if tentative_g < g_score.get(child, inf):
+                child.parent = current  # ensure path reconstruction works
+                g_score[child] = tentative_g
+                f = tentative_g + heuristic(child)
+                counter += 1
+                unexplored.put((f, counter, child))
+
+    return None  # return None if no path was found
