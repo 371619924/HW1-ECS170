@@ -62,18 +62,32 @@ class TilesNode:
         return new_state
 
     def get_children(self) -> list["TilesNode"]:
-        size = len(self.state)
-        er, ec = self.find_empty_space()
-        children = []
-
-        # Up, Down, Left, Right
-        moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        for dr, dc in moves:
+         size = len(self.state)
+         er, ec = self.find_empty_space()
+         children = []
+         for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  
             nr, nc = er + dr, ec + dc
             if 0 <= nr < size and 0 <= nc < size:
                 new_state = self.swap_tiles(er, ec, nr, nc)
-                children.append(TilesNode(state=new_state, parent=self))
-        return children
+                children.append(TilesNode(new_state, parent=self))
+         return children
+    def is_solvable(self) -> bool:
+        
+        size = len(self.state)
+        flat = [x for row in self.state for x in row if x != 0]
+        inversions = 0
+        for i in range(len(flat)):
+            for j in range(i + 1, len(flat)):
+                if flat[i] > flat[j]:
+                    inversions += 1
+
+        er, _ = self.find_empty_space()
+        row_from_bottom = size - er  
+
+        if size % 2 == 1:
+            return inversions % 2 == 0
+        else:
+            return (inversions + row_from_bottom) % 2 == 1
 
 
     def __str__(self):

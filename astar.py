@@ -31,45 +31,46 @@ def AStar(root, heuristic: callable) -> TilesNode or None:  # type: ignore
     # To sort the queue items, it uses the first element of each tuple
     # If the first elements are equal, it uses the second element, and so on
     # You may implement a counter to resolve ties
-    if root.is_goal():
+     if root.is_goal():
         return [root]
+     
 
-    unexplored = PriorityQueue()
-    counter = 0
 
-    g_score = {root: 0}
-    f0 = heuristic(root)
-    unexplored.put((f0, counter, root))
+     pq = PriorityQueue()
+     counter = 0
 
-    explored = set()
+     g_score = {root: 0}
+     f0 = heuristic(root)
+     pq.put((f0, counter, root))
 
-    while not unexplored.empty():
-        f_curr, _, current = unexplored.get()
+     closed = set()
 
-        # If this node has already been finalized with a better g, skip
-        if current in explored:
+     while not pq.empty():
+        _, _, current = pq.get()
+
+        if current in closed:
             continue
 
         if current.is_goal():
             return current.get_path()
 
-        explored.add(current)
-
+        closed.add(current)
         curr_g = g_score[current]
 
         for child in current.get_children():
-            tentative_g = curr_g + 1  # each move costs 1
+            tentative_g = curr_g + 1  
 
-            # If we've already finalized a better path, skip
-            if child in explored and tentative_g >= g_score.get(child, inf):
+            
+            if child in closed and tentative_g >= g_score.get(child, float("inf")):
                 continue
 
-            # If this path to child is better, record it
-            if tentative_g < g_score.get(child, inf):
-                child.parent = current  # ensure path reconstruction works
+            
+            if tentative_g < g_score.get(child, float("inf")):
+                child.parent = current
                 g_score[child] = tentative_g
                 f = tentative_g + heuristic(child)
                 counter += 1
-                unexplored.put((f, counter, child))
+                pq.put((f, counter, child))
 
-    return None  # return None if no path was found
+
+     return None
