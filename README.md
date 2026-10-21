@@ -1,10 +1,10 @@
-# ECS 170: Introduction to Artificial Intelligence
+# A* Sliding Puzzle Solver
 
-UC Davis
+A Python A* solver for the 15-puzzle using a Manhattan-distance heuristic.
 
-Fall 2024
+UC Davis ECS 170 course project, Fall 2024.
 
-# Homework 1
+## Original Course Instructions
 
 ## Instructions
 
